@@ -1,0 +1,13 @@
+{
+  "name": "binary-quiz-game",
+  "version": "1.0.0",
+  "description": "2진법/10진법/16진법 변환 실시간 퀴즈 게임 (8비트 레트로)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

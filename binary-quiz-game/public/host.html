@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>진법 변환 퀴즈 — 관리자 화면</title>
+<link rel="stylesheet" href="/css/retro.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 1. 방 생성 -->
+  <section id="s-setup" class="screen active">
+    <h1 class="title center">BASE CONVERTER QUIZ<br />진법 변환 퀴즈</h1>
+    <div class="panel glow-cyan">
+      <div class="sub center">게임 설정을 정한 뒤 방을 만들어 주세요.</div>
+
+      <label class="label" for="opt-count">총 문제 수 (3~30)</label>
+      <input id="opt-count" class="field" type="number" min="3" max="30" value="12" />
+
+      <div class="grid-2">
+        <div>
+          <label class="label" for="opt-time">문제당 제한시간(초)</label>
+          <input id="opt-time" class="field" type="number" min="5" max="120" value="20" />
+        </div>
+        <div>
+          <label class="label" for="opt-hardtime">어려움 제한시간(초)</label>
+          <input id="opt-hardtime" class="field" type="number" min="5" max="120" value="25" />
+        </div>
+      </div>
+
+      <label class="label">난이도 비율 (쉬움 : 보통 : 어려움)</label>
+      <div class="row">
+        <input id="opt-easy" class="field" type="number" min="0" max="10" value="3" />
+        <input id="opt-medium" class="field" type="number" min="0" max="10" value="5" />
+        <input id="opt-hard" class="field" type="number" min="0" max="10" value="2" />
+      </div>
+
+      <label class="label"><input type="checkbox" id="opt-zeros" /> 앞자리 0이 붙은 답도 정답 처리 (예: 0101 = 101)</label>
+      <label class="label"><input type="checkbox" id="opt-combo" checked /> 연속 정답 콤보 보너스 사용</label>
+      <label class="label"><input type="checkbox" id="opt-sound" checked /> 효과음 사용</label>
+
+      <div style="margin-top:18px">
+        <button id="btn-create" class="btn green big">방 만들기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 대기실 -->
+  <section id="s-lobby" class="screen">
+    <div class="panel glow-green center">
+      <div class="sub">참여자는 아래 주소로 접속하세요</div>
+      <div class="joinurl" id="join-url">-</div>
+      <div class="sub" style="margin-top:14px">방 코드</div>
+      <div class="roomcode" id="room-code">----</div>
+      <div id="qr-wrap" style="margin-top:6px"></div>
+    </div>
+    <div class="panel">
+      <div class="qmeta">
+        <span>참여자 <b class="cyan" id="lobby-count">0</b>명</span>
+        <span class="badge" id="lobby-setting">-</span>
+      </div>
+      <div class="players" id="lobby-players" style="margin-top:14px"></div>
+    </div>
+    <button id="btn-start" class="btn green big disabled" disabled>게임 시작 (참여자 1명 이상)</button>
+  </section>
+
+  <!-- 3. 문제 진행 -->
+  <section id="s-question" class="screen">
+    <div class="panel glow-cyan">
+      <div class="qmeta">
+        <span class="mono" id="q-index">1 / 12</span>
+        <span class="badge" id="q-diff">★ 쉬움</span>
+      </div>
+      <div class="progress" style="margin-top:10px"><i id="q-progress" style="width:0%"></i></div>
+      <div class="qprompt" id="q-prompt">-</div>
+      <div class="qvalue" id="q-value">-</div>
+      <div class="qbase" id="q-base">-</div>
+      <div class="timerbar" id="q-timerbar"><i></i></div>
+      <div class="timernum" id="q-timer">20</div>
+      <div class="center mono" style="margin-top:10px;font-size:16px" id="q-submitted">0 / 0 명 제출</div>
+    </div>
+    <button id="btn-skip" class="btn ghost">▶ 바로 정답 공개</button>
+  </section>
+
+  <!-- 4. 정답 공개 -->
+  <section id="s-reveal" class="screen">
+    <div class="panel glow-green center">
+      <div class="sub" id="r-prompt">-</div>
+      <div class="qvalue" id="r-source">-</div>
+      <div class="sub">정답</div>
+      <div class="qvalue green" id="r-answer">-</div>
+      <div class="explain" id="r-explain">-</div>
+      <div class="sub" style="margin-top:16px">정답자 <b class="green" id="r-correct">0</b> / <span id="r-total">0</span>명</div>
+      <div class="statbar"><i id="r-bar" style="width:0%"></i></div>
+    </div>
+    <button id="btn-skip2" class="btn ghost">▶ 다음으로</button>
+  </section>
+
+  <!-- 5. 중간 순위 -->
+  <section id="s-board" class="screen">
+    <h2 class="title center">TOP 5</h2>
+    <ul class="board" id="board-list"></ul>
+    <div class="sub center" id="board-next">-</div>
+    <button id="btn-skip3" class="btn ghost" style="margin-top:12px">▶ 다음 문제</button>
+  </section>
+
+  <!-- 6. 최종 결과 -->
+  <section id="s-final" class="screen">
+    <h2 class="title center">GAME OVER — 최종 순위</h2>
+    <div class="podium" id="podium"></div>
+    <div class="panel">
+      <ul class="board" id="final-list"></ul>
+    </div>
+    <div class="panel">
+      <div class="sub">문제별 정답률</div>
+      <div id="final-stats" style="margin-top:10px"></div>
+    </div>
+    <button id="btn-restart" class="btn yellow big">같은 방으로 다시 시작</button>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/host.js"></script>
+</body>
+</html>

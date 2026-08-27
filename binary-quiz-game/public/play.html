@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>진법 변환 퀴즈 — 참여하기</title>
+<link rel="stylesheet" href="/css/retro.css" />
+</head>
+<body>
+<div class="wrap narrow">
+
+  <!-- 1. 방 코드 입력 -->
+  <section id="s-code" class="screen active">
+    <h1 class="title center">BASE QUIZ<br />진법 변환 퀴즈</h1>
+    <div class="panel glow-cyan">
+      <label class="label" for="in-code">방 코드 4자리</label>
+      <input id="in-code" class="field mono" inputmode="numeric" maxlength="4" placeholder="0000" />
+      <button id="btn-code" class="btn big green" style="margin-top:16px">다음</button>
+    </div>
+  </section>
+
+  <!-- 2. 닉네임 -->
+  <section id="s-nick" class="screen">
+    <div class="panel glow-cyan">
+      <label class="label" for="in-nick">닉네임 (최대 12자)</label>
+      <input id="in-nick" class="field" maxlength="12" placeholder="이름을 입력하세요" />
+      <button id="btn-nick" class="btn big green" style="margin-top:16px">참여하기</button>
+    </div>
+  </section>
+
+  <!-- 3. 대기실 -->
+  <section id="s-lobby" class="screen">
+    <div class="panel glow-green center">
+      <div class="qvalue" id="me-avatar" style="font-size:52px">👾</div>
+      <div class="title" style="font-size:18px" id="me-nick">-</div>
+      <div class="sub dots" style="margin-top:12px">다른 참여자를 기다리는 중</div>
+      <div class="sub" style="margin-top:10px">현재 <b class="cyan" id="lobby-count">0</b>명 참여</div>
+    </div>
+  </section>
+
+  <!-- 4. 문제 풀이 -->
+  <section id="s-question" class="screen">
+    <div class="qmeta">
+      <span class="mono" id="q-index">1 / 12</span>
+      <span class="mono" id="q-timer">20</span>
+    </div>
+    <div class="timerbar" id="q-timerbar"><i></i></div>
+    <div class="qprompt" id="q-prompt">-</div>
+    <div class="qvalue" id="q-value">-</div>
+    <div class="qbase center sub" id="q-base">-</div>
+
+    <div class="answerbox" id="answer-box" style="margin-top:12px"><span class="caret">_</span></div>
+    <div class="keypad" id="keypad"></div>
+    <button id="btn-submit" class="btn big green" style="margin-top:12px">제출</button>
+  </section>
+
+  <!-- 5. 제출 완료 대기 -->
+  <section id="s-wait" class="screen">
+    <div class="panel glow-cyan center">
+      <div class="qvalue cyan" id="wait-answer">-</div>
+      <div class="sub">제출 완료!</div>
+      <div class="sub dots" style="margin-top:16px">다른 친구들을 기다리는 중</div>
+    </div>
+  </section>
+
+  <!-- 6. 결과 피드백 -->
+  <section id="s-result" class="screen">
+    <div class="panel center" id="result-panel">
+      <div class="verdict" id="verdict">O</div>
+      <div class="gain" id="gain">+0</div>
+      <div class="combo" id="combo" style="display:none">COMBO x2</div>
+      <div class="sub" style="margin-top:14px">정답</div>
+      <div class="qvalue green" id="res-answer" style="font-size:clamp(24px,7vw,44px)">-</div>
+      <div class="explain" id="res-explain">-</div>
+      <div class="sub" style="margin-top:16px">
+        내 점수 <b class="yellow mono" id="res-score">0</b> ·
+        <b class="cyan mono" id="res-rank">-</b>등 / <span id="res-total">-</span>명
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. 최종 -->
+  <section id="s-final" class="screen">
+    <h2 class="title center">GAME OVER</h2>
+    <div class="panel glow-green center">
+      <div class="sub">내 최종 순위</div>
+      <div class="roomcode" id="f-rank">-</div>
+      <div class="sub">/ <span id="f-total">-</span>명 중</div>
+      <div class="gain" style="margin-top:10px" id="f-score">0 점</div>
+    </div>
+    <div class="panel">
+      <div class="sub center" style="margin-bottom:10px">TOP 3</div>
+      <ul class="board" id="f-top3"></ul>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/play.js"></script>
+</body>
+</html>
