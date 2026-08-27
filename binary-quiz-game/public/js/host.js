@@ -8,7 +8,7 @@
 
   // ── 화면 전환 ────────────────────────────────────────
   function show(name) {
-    ['setup', 'lobby', 'question', 'reveal', 'board', 'final'].forEach(function (s) {
+    ['setup', 'lobby', 'question', 'reveal', 'final'].forEach(function (s) {
       $('s-' + s).classList.toggle('active', s === name);
     });
   }
@@ -97,7 +97,7 @@
     sfx('start');
   });
 
-  ['btn-skip', 'btn-skip2', 'btn-skip3'].forEach(function (id) {
+  ['btn-skip', 'btn-skip2'].forEach(function (id) {
     $(id).addEventListener('click', function () { socket.emit('host:next'); });
   });
 
@@ -187,22 +187,25 @@
     $('r-total').textContent = d.totalPlayers;
     var pct = d.totalPlayers ? (d.correctCount / d.totalPlayers * 100) : 0;
     $('r-bar').style.width = pct.toFixed(0) + '%';
-    show('reveal');
-    sfx('reveal');
-  });
 
-  socket.on('game:leaderboard', function (d) {
-    var ul = $('board-list');
+    // 정답을 읽는 동안 오른쪽에 순위를 함께 보여준다 (교실 프로젝터용)
+    var board = d.ranking || [];
+    var shown = board.slice(0, 8);
+    var ul = $('r-board');
     ul.innerHTML = '';
-    d.top.forEach(function (p) {
+    shown.forEach(function (p) {
       var li = document.createElement('li');
       li.innerHTML = '<span class="rk">' + p.rank + '위</span>' +
         '<span class="nm">' + p.avatar + ' ' + escapeHtml(p.nickname) + '</span>' +
         '<span class="sc">' + p.score + '</span>';
       ul.appendChild(li);
     });
-    $('board-next').textContent = '다음 문제 ' + d.nextIndex + ' / ' + d.total + ' 준비 중...';
-    show('board');
+    $('r-more').textContent = board.length > shown.length ? '… 외 ' + (board.length - shown.length) + '명' : '';
+    $('r-progress').textContent = d.isLast
+      ? '마지막 문제'
+      : d.index + ' / ' + d.total + ' 완료 → 다음 문제';
+
+    show('reveal');
     sfx('reveal');
   });
 

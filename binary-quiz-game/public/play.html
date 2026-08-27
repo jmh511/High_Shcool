@@ -66,9 +66,16 @@
   <!-- 5. 제출 완료 대기 -->
   <section id="s-wait" class="screen">
     <div class="panel glow-cyan center">
+      <div class="sub">내가 낸 답</div>
       <div class="qvalue cyan" id="wait-answer">-</div>
-      <div class="sub">제출 완료!</div>
-      <div class="sub dots" style="margin-top:16px">다른 친구들을 기다리는 중</div>
+      <div class="title" style="font-size:16px;margin:6px 0 0">제출 완료!</div>
+
+      <div class="sub dots" style="margin-top:22px">다른 친구들을 기다리는 중</div>
+      <div class="mono" style="font-size:22px;margin-top:10px">
+        <b class="green" id="wait-done">0</b> / <span id="wait-total">0</span> 명 제출
+      </div>
+      <div class="progress" style="margin-top:10px"><i id="wait-bar" style="width:0%"></i></div>
+      <div class="sub" style="margin-top:14px">모두 제출하면 시간이 남아도 바로 다음 문제로 넘어가요</div>
     </div>
   </section>
 

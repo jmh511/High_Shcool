@@ -102,6 +102,13 @@
   });
 
   socket.on('room:players', function (d) { $('lobby-count').textContent = d.count; });
+
+  // 제출 대기 화면에 몇 명이 냈는지 실시간으로 보여준다
+  socket.on('game:submitCount', function (d) {
+    $('wait-done').textContent = d.submitted;
+    $('wait-total').textContent = d.total;
+    $('wait-bar').style.width = (d.total ? (d.submitted / d.total * 100) : 0).toFixed(0) + '%';
+  });
   socket.on('game:reset', function () { audio.playBgm('lobby'); show('lobby'); });
   socket.on('error:msg', function (d) {
     toast(d.message);

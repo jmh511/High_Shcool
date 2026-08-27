@@ -6,7 +6,7 @@
 <title>진법 변환 퀴즈 — 관리자 화면</title>
 <link rel="stylesheet" href="/css/retro.css" />
 </head>
-<body>
+<body class="host">
 <div class="wrap">
 
   <!-- 1. 방 생성 -->
@@ -101,26 +101,31 @@
     <button id="btn-skip" class="btn ghost">▶ 바로 정답 공개</button>
   </section>
 
-  <!-- 4. 정답 공개 -->
+  <!-- 4. 정답 공개 + 순위 (한 화면에 나란히) -->
   <section id="s-reveal" class="screen">
-    <div class="panel glow-green center">
-      <div class="sub" id="r-prompt">-</div>
-      <div class="qvalue" id="r-source">-</div>
-      <div class="sub">정답</div>
-      <div class="qvalue green" id="r-answer">-</div>
-      <div class="explain" id="r-explain">-</div>
-      <div class="sub" style="margin-top:16px">정답자 <b class="green" id="r-correct">0</b> / <span id="r-total">0</span>명</div>
-      <div class="statbar"><i id="r-bar" style="width:0%"></i></div>
-    </div>
-    <button id="btn-skip2" class="btn ghost">▶ 다음으로</button>
-  </section>
+    <div class="split">
+      <!-- 왼쪽: 정답과 풀이 -->
+      <div class="panel glow-green center">
+        <div class="sub big" id="r-prompt">-</div>
+        <div class="qvalue" id="r-source">-</div>
+        <div class="sub big">정답</div>
+        <div class="qvalue green" id="r-answer">-</div>
+        <div class="explain" id="r-explain">-</div>
+        <div class="sub big" style="margin-top:16px">정답자 <b class="green" id="r-correct">0</b> / <span id="r-total">0</span>명</div>
+        <div class="statbar"><i id="r-bar" style="width:0%"></i></div>
+      </div>
 
-  <!-- 5. 중간 순위 -->
-  <section id="s-board" class="screen">
-    <h2 class="title center">TOP 5</h2>
-    <ul class="board" id="board-list"></ul>
-    <div class="sub center" id="board-next">-</div>
-    <button id="btn-skip3" class="btn ghost" style="margin-top:12px">▶ 다음 문제</button>
+      <!-- 오른쪽: 현재 순위 -->
+      <div class="panel glow-cyan">
+        <div class="qmeta">
+          <span class="title" style="font-size:18px;margin:0">순위</span>
+          <span class="badge" id="r-progress">-</span>
+        </div>
+        <ul class="board big" id="r-board" style="margin-top:14px"></ul>
+        <div class="sub center" id="r-more"></div>
+      </div>
+    </div>
+    <button id="btn-skip2" class="btn ghost">▶ 다음 문제로</button>
   </section>
 
   <!-- 6. 최종 결과 -->

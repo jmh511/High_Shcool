@@ -23,8 +23,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // ───────────────────────── 상수 ─────────────────────────
-const REVEAL_MS = 7000; // 정답 공개 화면 유지 시간
-const LEADERBOARD_MS = 5000; // 중간 순위 화면 유지 시간
+const REVEAL_MS = 9000; // 정답 공개 + 순위 화면 유지 시간
 const GRACE_MS = 700; // 네트워크 지연 여유
 const AVATARS = ['👾', '🤖', '👻', '🐱', '🦊', '🐸', '🐙', '🦖'];
 
@@ -197,6 +196,10 @@ function endQuestion(room) {
     total: totalP,
   });
 
+  const isLast = room.currentQuestionIndex >= room.questions.length - 1;
+
+  // 정답 공개 화면에 순위를 함께 실어 보낸다.
+  // (관리자 화면은 교실 프로젝터용이므로 정답을 읽는 동안 순위도 같이 보이게 한다)
   io.to(room.roomCode).emit('game:reveal', {
     index: room.currentQuestionIndex + 1,
     total: room.questions.length,
@@ -207,28 +210,12 @@ function endQuestion(room) {
     correctCount,
     answeredCount: answered,
     totalPlayers: totalP,
+    ranking: leaderboard(room),
+    isLast,
     nextInMs: REVEAL_MS,
   });
 
-  room.timer = setTimeout(() => showLeaderboard(room), REVEAL_MS);
-}
-
-function showLeaderboard(room) {
-  clearRoomTimer(room);
-  if (room.phase !== 'reveal') return;
-  const isLast = room.currentQuestionIndex >= room.questions.length - 1;
-  if (isLast) {
-    finishGame(room);
-    return;
-  }
-  room.phase = 'leaderboard';
-  io.to(room.roomCode).emit('game:leaderboard', {
-    top: leaderboard(room).slice(0, 5),
-    nextInMs: LEADERBOARD_MS,
-    nextIndex: room.currentQuestionIndex + 2,
-    total: room.questions.length,
-  });
-  room.timer = setTimeout(() => nextQuestion(room), LEADERBOARD_MS);
+  room.timer = setTimeout(() => (isLast ? finishGame(room) : nextQuestion(room)), REVEAL_MS);
 }
 
 function nextQuestion(room) {
@@ -262,9 +249,13 @@ function finishGame(room) {
 
 /** 정답 공개/순위 화면에서 호스트가 "다음"을 눌러 대기 시간을 건너뛴다 */
 function skipWait(room) {
-  if (room.phase === 'question') endQuestion(room);
-  else if (room.phase === 'reveal') showLeaderboard(room);
-  else if (room.phase === 'leaderboard') nextQuestion(room);
+  if (room.phase === 'question') {
+    endQuestion(room);
+  } else if (room.phase === 'reveal') {
+    const isLast = room.currentQuestionIndex >= room.questions.length - 1;
+    if (isLast) finishGame(room);
+    else nextQuestion(room);
+  }
 }
 
 // ───────────────────────── 소켓 핸들러 ─────────────────────────

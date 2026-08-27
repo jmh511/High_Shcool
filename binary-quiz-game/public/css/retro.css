@@ -463,3 +463,42 @@ body::before {
   border: 3px solid var(--magenta);
   color: var(--magenta);
 }
+
+/* ============================================================
+   관리자(호스트) 화면 — 교실 프로젝터/TV 전용 레이아웃
+   뒷자리에서도 읽히도록 크게, 넓은 화면을 최대한 활용한다.
+   ============================================================ */
+body.host .wrap { max-width: 1600px; }
+
+/* 정답 공개 + 순위를 좌우로 나란히 */
+.split { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+.sub.big { font-size: clamp(16px, 1.6vw, 24px); }
+
+/* 순위표 — 교실 뒤에서도 읽히는 크기 */
+.board.big li { font-size: clamp(16px, 1.7vw, 26px); padding: 14px 16px; }
+.board.big li .rk { min-width: 3.2em; }
+.board.big li .sc { font-size: 0.95em; }
+
+/* 프로젝터에서 문제 화면 크게 */
+body.host .qprompt { font-size: clamp(20px, 2.6vw, 40px); }
+body.host .qvalue { font-size: clamp(40px, 7.5vw, 110px); }
+body.host .qbase { font-size: clamp(14px, 1.4vw, 22px); }
+body.host .timernum { font-size: clamp(28px, 4vw, 64px); }
+body.host .timerbar { height: 30px; }
+body.host #q-submitted { font-size: clamp(18px, 2.2vw, 34px) !important; color: var(--cyan); }
+body.host .explain { font-size: clamp(12px, 1.3vw, 20px); }
+body.host .roomcode { font-size: clamp(56px, 13vw, 140px); }
+body.host .joinurl { font-size: clamp(16px, 2vw, 30px); }
+body.host .pcard { font-size: clamp(15px, 1.5vw, 22px); }
+body.host .qmeta { font-size: clamp(14px, 1.4vw, 20px); }
+body.host .fmt-badge, body.host .badge { font-size: clamp(12px, 1.2vw, 17px); }
+
+/* 프로젝터용 4지선다 보기 */
+body.host .choice { font-size: clamp(18px, 2.4vw, 38px); padding: 24px 16px; }
+
+/* 최종 결과 */
+body.host .winner-name { font-size: clamp(26px, 4vw, 56px); }
+body.host .podium .p .who { font-size: clamp(15px, 1.6vw, 24px); }
+body.host .podium .p .av { font-size: clamp(34px, 4vw, 60px); }
