@@ -14,6 +14,7 @@
     limit: 20,
     raf: null,
     submitted: false,
+    format: 'input',
   };
 
   function show(name) {
@@ -97,11 +98,11 @@
     sessionStorage.setItem('bq_player', JSON.stringify({ id: d.playerId, room: d.roomCode }));
     $('me-nick').textContent = d.nickname;
     $('me-avatar').textContent = d.avatar;
-    if (d.phase !== 'question') show('lobby');
+    if (d.phase !== 'question') { show('lobby'); audio.playBgm('lobby'); }
   });
 
   socket.on('room:players', function (d) { $('lobby-count').textContent = d.count; });
-  socket.on('game:reset', function () { audio.stopBgm(); show('lobby'); });
+  socket.on('game:reset', function () { audio.playBgm('lobby'); show('lobby'); });
   socket.on('error:msg', function (d) {
     toast(d.message);
     if (!state.playerId) show('code');
@@ -146,6 +147,33 @@
     sfx('key');
   }
 
+  // ── 4지선다 보기 ────────────────────────────────────
+  function buildChoices(choices) {
+    var box = $('choices');
+    box.innerHTML = '';
+    choices.forEach(function (c, i) {
+      var b = document.createElement('button');
+      b.className = 'choice';
+      b.type = 'button';
+      b.innerHTML = '<span class="mark">' + (i + 1) + '</span><span>' + escapeHtml(c) + '</span>';
+      b.addEventListener('click', function () { pickChoice(c, b); });
+      box.appendChild(b);
+    });
+  }
+
+  /** 보기를 고르면 바로 제출된다 (카훗 방식) */
+  function pickChoice(value, btn) {
+    if (state.submitted) return;
+    state.answer = value;
+    state.submitted = true;
+    [].forEach.call($('choices').children, function (el) {
+      el.classList.add('disabled');
+      if (el === btn) { el.classList.add('picked'); el.classList.remove('disabled'); }
+    });
+    sfx('select');
+    socket.emit('player:answer', { answer: value });
+  }
+
   function renderAnswer() {
     $('answer-box').innerHTML = escapeHtml(state.answer) + '<span class="caret">_</span>';
   }
@@ -154,6 +182,17 @@
   document.addEventListener('keydown', function (e) {
     if (!$('s-question').classList.contains('active')) return;
     var k = e.key.toUpperCase();
+
+    // 4지선다는 1~4 숫자키로 고른다
+    if (state.format === 'choice') {
+      var idx = parseInt(k, 10);
+      if (idx >= 1 && idx <= 4) {
+        var btn = $('choices').children[idx - 1];
+        if (btn) btn.click();
+      }
+      return;
+    }
+
     if (k === 'ENTER') { submit(); return; }
     if (k === 'BACKSPACE') {
       state.answer = state.answer.slice(0, -1);
@@ -211,15 +250,26 @@
     state.toBase = q.toBase;
     state.answer = '';
     state.submitted = false;
+    state.format = q.format === 'choice' ? 'choice' : 'input';
     $('q-index').textContent = q.index + ' / ' + q.total;
     $('q-prompt').textContent = q.prompt;
     $('q-value').textContent = q.sourceValue;
     $('q-base').textContent = baseName(q.fromBase) + ' → ' + baseName(q.toBase) + ' (' + q.difficultyLabel + ')';
-    renderAnswer();
-    buildKeypad(q.toBase);
+
+    if (state.format === 'choice') {
+      buildChoices(q.choices || []);
+      $('choice-mode').style.display = '';
+      $('input-mode').style.display = 'none';
+    } else {
+      renderAnswer();
+      buildKeypad(q.toBase);
+      $('choice-mode').style.display = 'none';
+      $('input-mode').style.display = '';
+    }
+
     show('question');
     runTimer();
-    audio.stopBgm();
+    audio.playBgm('game'); // 문제 푸는 동안 깔리는 배경음
     sfx('question');
   });
 

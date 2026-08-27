@@ -2,23 +2,27 @@
    8비트 사운드 엔진 (효과음 + 배경음악)
    - 음원 파일 없이 Web Audio API로 칩튠을 직접 합성한다.
    - public/assets/sounds/ 에 mp3를 넣어두면 그 파일을 우선 재생한다.
-   - 음소거 상태는 브라우저에 저장되어 새로고침해도 유지된다.
+   - 효과음과 배경음악을 각각 따로 끄고 켤 수 있고,
+     그 설정은 브라우저에 저장되어 새로고침해도 유지된다.
    ============================================================ */
 window.RetroAudio = (function () {
   'use strict';
 
-  var STORE_KEY = 'bq_sound';
-  var enabled = load();
+  var SFX_KEY = 'bq_sfx';
+  var BGM_KEY = 'bq_bgm';
+  var sfxOn = load(SFX_KEY);
+  var bgmOn = load(BGM_KEY);
+
   var ctx = null;
   var bgmTimer = null;   // 합성 배경음 스텝 타이머
   var bgmEl = null;      // mp3 재생용 <audio>
   var currentTrack = null;
 
-  function load() {
-    try { return localStorage.getItem(STORE_KEY) !== 'off'; } catch (e) { return true; }
+  function load(key) {
+    try { return localStorage.getItem(key) !== 'off'; } catch (e) { return true; }
   }
-  function save(v) {
-    try { localStorage.setItem(STORE_KEY, v ? 'on' : 'off'); } catch (e) { /* 무시 */ }
+  function save(key, v) {
+    try { localStorage.setItem(key, v ? 'on' : 'off'); } catch (e) { /* 무시 */ }
   }
 
   function ac() {
@@ -43,7 +47,6 @@ window.RetroAudio = (function () {
 
   /** 한 음 재생 */
   function tone(note, dur, type, vol) {
-    if (!enabled) return;
     var c = ac();
     if (!c) return;
     try {
@@ -66,7 +69,7 @@ window.RetroAudio = (function () {
 
   function seq(notes, gap, dur, type, vol) {
     notes.forEach(function (n, i) {
-      setTimeout(function () { tone(n, dur || 0.12, type, vol); }, i * (gap || 90));
+      setTimeout(function () { if (sfxOn) tone(n, dur || 0.12, type, vol); }, i * (gap || 90));
     });
   }
 
@@ -74,6 +77,7 @@ window.RetroAudio = (function () {
   var SFX = {
     key: function () { tone('C6', 0.04, 'square', 0.04); },
     del: function () { tone('E4', 0.05, 'square', 0.04); },
+    select: function () { seq(['G5', 'C6'], 60, 0.07); },
     submit: function () { seq(['E5', 'A5'], 70, 0.09); },
     join: function () { seq(['A5', 'E6'], 70, 0.08, 'square', 0.05); },
     tick: function () { tone('C7', 0.04, 'square', 0.035); },
@@ -84,16 +88,15 @@ window.RetroAudio = (function () {
     start: function () { seq(['C5', 'E5', 'G5', 'C6'], 100, 0.13, 'square', 0.07); },
     // 우승자 발표 팡파레
     victory: function () {
-      seq(['C5', 'C5', 'C5', 'C5', 'E5', 'G5', 'C6', 'G5', 'C6'],
-        130, 0.2, 'square', 0.08);
-      [0, 130, 260, 390].forEach(function (d, i) {
-        setTimeout(function () { tone(['C3', 'C3', 'C3', 'C3'][i], 0.2, 'triangle', 0.09); }, d);
+      seq(['C5', 'C5', 'C5', 'C5', 'E5', 'G5', 'C6', 'G5', 'C6'], 130, 0.2, 'square', 0.08);
+      [0, 130, 260, 390].forEach(function (d) {
+        setTimeout(function () { if (sfxOn) tone('C3', 0.2, 'triangle', 0.09); }, d);
       });
     },
   };
 
   function sfx(name) {
-    if (!enabled) return;
+    if (!sfxOn) return;
     var fn = SFX[name];
     if (fn) fn();
   }
@@ -101,21 +104,35 @@ window.RetroAudio = (function () {
   // ── 배경음악 ───────────────────────────────────────
   // null = 쉼표. 8분음표 단위 시퀀스.
   var TRACKS = {
-    victory: {
-      file: '/assets/sounds/victory.mp3',
-      bpm: 128,
-      lead: ['C5', 'E5', 'G5', 'C6', 'B5', 'G5', 'E5', 'G5',
-             'A5', 'C6', 'E6', 'C6', 'G5', 'E5', 'C5', null],
-      bass: ['C3', null, 'G2', null, 'E3', null, 'G2', null,
-             'F3', null, 'C3', null, 'G2', null, 'C3', null],
-    },
+    // 대기실 — 느긋하게 기다리는 분위기
     lobby: {
       file: '/assets/sounds/lobby.mp3',
-      bpm: 104,
+      bpm: 100,
+      vol: 0.035,
       lead: ['E5', null, 'G5', null, 'A5', null, 'G5', null,
              'E5', null, 'D5', null, 'E5', null, null, null],
       bass: ['A2', null, null, null, 'E2', null, null, null,
              'F2', null, null, null, 'G2', null, null, null],
+    },
+    // 문제 푸는 중 — 가볍게 깔리는 리듬 (문제 집중을 방해하지 않도록 작게)
+    game: {
+      file: '/assets/sounds/game.mp3',
+      bpm: 116,
+      vol: 0.03,
+      lead: ['A4', null, 'C5', null, 'E5', null, 'C5', null,
+             'G4', null, 'B4', null, 'D5', null, 'B4', null],
+      bass: ['A2', null, 'A2', null, 'E2', null, 'E2', null,
+             'G2', null, 'G2', null, 'D2', null, 'D2', null],
+    },
+    // 최종 결과 — 승리의 행진곡
+    victory: {
+      file: '/assets/sounds/victory.mp3',
+      bpm: 128,
+      vol: 0.045,
+      lead: ['C5', 'E5', 'G5', 'C6', 'B5', 'G5', 'E5', 'G5',
+             'A5', 'C6', 'E6', 'C6', 'G5', 'E5', 'C5', null],
+      bass: ['C3', null, 'G2', null, 'E3', null, 'G2', null,
+             'F3', null, 'C3', null, 'G2', null, 'C3', null],
     },
   };
 
@@ -125,20 +142,24 @@ window.RetroAudio = (function () {
     var stepMs = 60000 / track.bpm / 2;
     var step = 0;
     bgmTimer = setInterval(function () {
-      if (!enabled) return;
+      if (!bgmOn) return;
       var l = track.lead[step % track.lead.length];
       var b = track.bass[step % track.bass.length];
-      if (l) tone(l, stepMs * 0.85 / 1000, 'square', 0.045);
-      if (b) tone(b, stepMs * 1.7 / 1000, 'triangle', 0.05);
+      if (l) tone(l, stepMs * 0.85 / 1000, 'square', track.vol);
+      if (b) tone(b, stepMs * 1.7 / 1000, 'triangle', track.vol * 1.15);
       step += 1;
     }, stepMs);
   }
 
-  /** 배경음악 재생 — mp3가 있으면 mp3, 없으면 합성음 */
+  /**
+   * 배경음악 재생 — mp3가 있으면 mp3, 없으면 합성음.
+   * 이미 같은 곡이 흐르고 있으면 끊지 않고 그대로 둔다.
+   */
   function playBgm(name) {
+    if (currentTrack === name && (bgmTimer || bgmEl)) return;
     stopBgm();
     currentTrack = name;
-    if (!enabled || !TRACKS[name]) return;
+    if (!bgmOn || !TRACKS[name]) return;
     var usedFallback = false;
     var fallback = function () {
       if (usedFallback) return;
@@ -166,44 +187,64 @@ window.RetroAudio = (function () {
   }
 
   // ── 켜기/끄기 ──────────────────────────────────────
-  function setEnabled(v) {
-    enabled = !!v;
-    save(enabled);
+  function setSfx(v) {
+    sfxOn = !!v;
+    save(SFX_KEY, sfxOn);
+    updateToggles();
+  }
+
+  function setBgm(v) {
+    bgmOn = !!v;
+    save(BGM_KEY, bgmOn);
     var track = currentTrack;
-    if (!enabled) {
-      // 재생 중이던 곡은 기억해 두고 멈춘다
+    if (!bgmOn) {
       stopBgm();
-      currentTrack = track;
+      currentTrack = track; // 다시 켤 때 이어서 틀 수 있도록 기억해 둔다
     } else if (track) {
+      currentTrack = null;
       playBgm(track);
     }
-    updateToggle();
+    updateToggles();
   }
 
-  function toggle() { setEnabled(!enabled); }
-
-  var btn = null;
-  function updateToggle() {
-    if (!btn) return;
-    btn.textContent = enabled ? '🔊 소리 ON' : '🔇 소리 OFF';
-    btn.classList.toggle('off', !enabled);
-    btn.setAttribute('aria-pressed', String(enabled));
+  var sfxBtn = null;
+  var bgmBtn = null;
+  function updateToggles() {
+    if (sfxBtn) {
+      sfxBtn.textContent = sfxOn ? '🔊 효과음' : '🔇 효과음';
+      sfxBtn.classList.toggle('off', !sfxOn);
+    }
+    if (bgmBtn) {
+      bgmBtn.textContent = bgmOn ? '🎵 배경음악' : '🔇 배경음악';
+      bgmBtn.classList.toggle('off', !bgmOn);
+    }
   }
 
-  /** 화면 우측 상단에 소리 on/off 버튼을 붙인다 */
+  /** 화면 우측 상단에 효과음 / 배경음악 on-off 버튼을 붙인다 */
   function mountToggle() {
-    if (btn) return btn;
-    btn = document.createElement('button');
-    btn.id = 'sound-toggle';
-    btn.className = 'sound-toggle';
-    btn.type = 'button';
-    btn.addEventListener('click', function () {
-      toggle();
-      if (enabled) sfx('join'); // 켤 때 소리로 확인
+    if (sfxBtn) return;
+    var box = document.createElement('div');
+    box.className = 'sound-box';
+
+    sfxBtn = document.createElement('button');
+    sfxBtn.className = 'sound-toggle';
+    sfxBtn.type = 'button';
+    sfxBtn.id = 'sfx-toggle';
+    sfxBtn.addEventListener('click', function () {
+      setSfx(!sfxOn);
+      if (sfxOn) sfx('select');
     });
-    document.body.appendChild(btn);
-    updateToggle();
-    return btn;
+
+    bgmBtn = document.createElement('button');
+    bgmBtn.className = 'sound-toggle';
+    bgmBtn.type = 'button';
+    bgmBtn.id = 'bgm-toggle';
+    bgmBtn.addEventListener('click', function () { setBgm(!bgmOn); });
+
+    box.appendChild(sfxBtn);
+    box.appendChild(bgmBtn);
+    document.body.appendChild(box);
+    updateToggles();
   }
 
   return {
@@ -211,9 +252,11 @@ window.RetroAudio = (function () {
     tone: tone,
     playBgm: playBgm,
     stopBgm: stopBgm,
-    setEnabled: setEnabled,
-    toggle: toggle,
+    setSfx: setSfx,
+    setBgm: setBgm,
     mountToggle: mountToggle,
-    isEnabled: function () { return enabled; },
+    isSfxOn: function () { return sfxOn; },
+    isBgmOn: function () { return bgmOn; },
+    currentTrack: function () { return currentTrack; },
   };
 })();

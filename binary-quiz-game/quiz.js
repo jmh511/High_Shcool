@@ -61,8 +61,74 @@ function poolFor(conf, mode) {
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+  }
+  return arr;
+}
+
 function toBase(n, base) {
   return n.toString(base).toUpperCase();
+}
+
+/**
+ * 4지선다 보기 만들기.
+ * 아무 숫자나 넣지 않고, 학생들이 실제로 하는 실수를 오답으로 만든다.
+ *  - 1 차이 (계산 실수)
+ *  - 2배 / 절반 (자릿수를 하나 밀린 경우)
+ *  - 정답의 두 자리를 바꾼 형태
+ *  - 정답을 거꾸로 쓴 형태 (자리값 순서를 반대로 읽은 경우)
+ */
+function makeChoices(n, base, correct) {
+  const seen = new Set([correct]);
+  const wrong = [];
+  const add = (s) => {
+    if (!s || seen.has(s)) return;
+    seen.add(s);
+    wrong.push(s);
+  };
+  const addValue = (v) => {
+    if (!Number.isFinite(v) || v < 1) return;
+    add(toBase(Math.floor(v), base));
+  };
+
+  addValue(n + 1);
+  addValue(n - 1);
+  addValue(n * 2);
+  addValue(Math.floor(n / 2));
+
+  // 정답의 인접한 두 자리를 바꿔치기
+  if (correct.length >= 2) {
+    const i = randInt(0, correct.length - 2);
+    const swapped = (correct.slice(0, i) + correct[i + 1] + correct[i] + correct.slice(i + 2)).replace(/^0+/, '');
+    add(swapped);
+  }
+  // 정답을 거꾸로
+  add(correct.split('').reverse().join('').replace(/^0+/, ''));
+
+  // 그래도 부족하면 근처 값으로 채운다
+  let guard = 0;
+  while (wrong.length < 3 && guard < 60) {
+    addValue(n + randInt(-9, 9));
+    guard += 1;
+  }
+
+  // 정답과 자릿수가 비슷한 오답을 우선 쓴다 (자릿수가 확 다르면 답이 티가 난다)
+  shuffle(wrong).sort((a, b) => Math.abs(a.length - correct.length) - Math.abs(b.length - correct.length));
+  return shuffle([correct].concat(wrong.slice(0, 3)));
+}
+
+/** 문제별 출제 형식(직접 입력 / 4지선다) 배분 */
+function planFormats(total, format) {
+  if (format === 'input' || format === 'choice') return new Array(total).fill(format);
+  // mixed — 절반씩 섞는다
+  const arr = [];
+  for (let i = 0; i < total; i += 1) arr.push(i % 2 === 0 ? 'input' : 'choice');
+  return shuffle(arr);
 }
 
 /** 난이도별 문제 수 계산 (합계가 total이 되도록 보정) */
@@ -86,7 +152,7 @@ function planDifficulties(total, mix) {
   return plan; // 쉬움 → 보통 → 어려움 순서 (앞쉬움/뒤어려움 자동 상승)
 }
 
-function makeQuestion(difficulty, id, timeLimitSec, seen, mode) {
+function makeQuestion(difficulty, id, timeLimitSec, seen, mode, format) {
   const conf = DIFFICULTY[difficulty];
   const pool = poolFor(conf, mode);
   // 2진법만 모드의 어려움 단계는 항상 8자리가 나오도록 범위를 좁힌다
@@ -119,16 +185,19 @@ function makeQuestion(difficulty, id, timeLimitSec, seen, mode) {
     correctAnswer,
     value: n,
     timeLimitSec,
+    format: format === 'choice' ? 'choice' : 'input',
+    choices: format === 'choice' ? makeChoices(n, to, correctAnswer) : null,
     explanation: explain(type, n, sourceValue, correctAnswer),
   };
 }
 
 function generateQuestions(settings) {
-  const { totalQuestions, timeLimitSec, hardTimeLimitSec, difficultyMix, questionMode } = settings;
+  const { totalQuestions, timeLimitSec, hardTimeLimitSec, difficultyMix, questionMode, answerFormat } = settings;
   const plan = planDifficulties(totalQuestions, difficultyMix);
+  const formats = planFormats(plan.length, answerFormat);
   const seen = new Set();
   return plan.map((d, i) =>
-    makeQuestion(d, `q${i + 1}`, d === 'hard' ? hardTimeLimitSec : timeLimitSec, seen, questionMode)
+    makeQuestion(d, `q${i + 1}`, d === 'hard' ? hardTimeLimitSec : timeLimitSec, seen, questionMode, formats[i])
   );
 }
 

@@ -28,10 +28,11 @@
 
   // ── 방 만들기 ────────────────────────────────────────
   $('btn-create').addEventListener('click', function () {
-    audio.setEnabled($('opt-sound').checked);
+    if (!$('opt-sound').checked) { audio.setSfx(false); audio.setBgm(false); }
     socket.emit('host:create', {
       settings: {
         questionMode: $('opt-mode').value,
+        answerFormat: $('opt-format').value,
         totalQuestions: +$('opt-count').value,
         timeLimitSec: +$('opt-time').value,
         hardTimeLimitSec: +$('opt-hardtime').value,
@@ -68,6 +69,7 @@
     wrap.appendChild(img);
 
     show('lobby');
+    audio.playBgm('lobby'); // 대기실 배경음
   });
 
   // ── 대기실 ──────────────────────────────────────────
@@ -104,7 +106,7 @@
     socket.emit('host:restart');
   });
 
-  socket.on('game:reset', function () { audio.stopBgm(); show('lobby'); });
+  socket.on('game:reset', function () { audio.playBgm('lobby'); show('lobby'); });
 
   // ── 타이머 ──────────────────────────────────────────
   function stopTimer() {
@@ -146,9 +148,26 @@
     $('q-prompt').textContent = q.prompt;
     $('q-value').textContent = q.sourceValue;
     $('q-base').textContent = base(q.fromBase) + ' → ' + base(q.toBase);
+    $('q-format').textContent = q.format === 'choice' ? '4지선다' : '직접 입력';
+
+    // 4지선다면 프로젝터 화면에도 보기를 띄운다
+    var box = $('q-choices');
+    if (q.format === 'choice' && q.choices) {
+      box.innerHTML = '';
+      q.choices.forEach(function (c, i) {
+        var el = document.createElement('div');
+        el.className = 'choice';
+        el.innerHTML = '<span class="mark">' + (i + 1) + '</span><span>' + escapeHtml(c) + '</span>';
+        box.appendChild(el);
+      });
+      box.style.display = '';
+    } else {
+      box.style.display = 'none';
+    }
+
     show('question');
     runTimer();
-    audio.stopBgm();
+    audio.playBgm('game'); // 문제 푸는 동안 깔리는 배경음
     sfx('question');
   });
 

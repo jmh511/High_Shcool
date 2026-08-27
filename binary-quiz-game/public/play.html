@@ -49,9 +49,18 @@
     <div class="qvalue" id="q-value">-</div>
     <div class="qbase center sub" id="q-base">-</div>
 
-    <div class="answerbox" id="answer-box" style="margin-top:12px"><span class="caret">_</span></div>
-    <div class="keypad" id="keypad"></div>
-    <button id="btn-submit" class="btn big green" style="margin-top:12px">제출</button>
+    <!-- 직접 입력 -->
+    <div id="input-mode">
+      <div class="answerbox" id="answer-box" style="margin-top:12px"><span class="caret">_</span></div>
+      <div class="keypad" id="keypad"></div>
+      <button id="btn-submit" class="btn big green" style="margin-top:12px">제출</button>
+    </div>
+
+    <!-- 4지선다 -->
+    <div id="choice-mode" style="display:none">
+      <div class="sub center" style="margin-top:10px">정답을 골라 주세요</div>
+      <div class="choices" id="choices"></div>
+    </div>
   </section>
 
   <!-- 5. 제출 완료 대기 -->

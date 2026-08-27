@@ -33,6 +33,7 @@ const DEFAULT_SETTINGS = {
   timeLimitSec: 20,
   hardTimeLimitSec: 25,
   questionMode: 'all', // all | binary | hex
+  answerFormat: 'mixed', // input | choice | mixed (직접 입력 | 4지선다 | 섞어서)
   difficultyMix: { easy: 0.3, medium: 0.5, hard: 0.2 },
   allowLeadingZeros: false,
   comboBonus: true,
@@ -66,6 +67,7 @@ function sanitizeSettings(raw) {
   s.hardTimeLimitSec = clamp(s.hardTimeLimitSec, 5, 120, 25);
   s.maxPlayers = clamp(s.maxPlayers, 1, 200, 40);
   s.questionMode = MODES[s.questionMode] ? s.questionMode : 'all';
+  s.answerFormat = ['input', 'choice', 'mixed'].indexOf(s.answerFormat) >= 0 ? s.answerFormat : 'mixed';
   const mix = Object.assign({}, DEFAULT_SETTINGS.difficultyMix, (raw && raw.difficultyMix) || {});
   let sum = ['easy', 'medium', 'hard'].reduce((a, k) => a + (Number(mix[k]) || 0), 0);
   if (sum <= 0) sum = 1;
@@ -131,6 +133,8 @@ function publicQuestion(room, q) {
     sourceValue: q.sourceValue,
     fromBase: q.fromBase,
     toBase: q.toBase,
+    format: q.format,
+    choices: q.choices,
     timeLimitSec: q.timeLimitSec,
     endsAt: room.questionEndsAt,
     serverNow: Date.now(),

@@ -375,11 +375,15 @@ body::before {
 }
 
 /* ── 소리 on/off 버튼 ─────────────────────────────────── */
-.sound-toggle {
+.sound-box {
   position: fixed;
   top: 10px;
   right: 10px;
   z-index: 10001;
+  display: flex;
+  gap: 6px;
+}
+.sound-toggle {
   font-family: var(--font-kr);
   font-size: 13px;
   padding: 9px 12px;
@@ -410,4 +414,52 @@ body::before {
   color: var(--yellow);
   text-shadow: var(--pixel) var(--pixel) 0 #3d3600;
   margin: 8px 0;
+}
+
+/* ── 4지선다 보기 ─────────────────────────────────────── */
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-num);
+  font-size: clamp(15px, 4.5vw, 26px);
+  padding: 20px 12px;
+  background: #2a2a55;
+  color: var(--white);
+  border: var(--pixel) solid #0a0a1c;
+  box-shadow: var(--pixel) var(--pixel) 0 #000;
+  cursor: pointer;
+  word-break: break-all;
+  text-align: left;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.choice:active { transform: translate(var(--pixel), var(--pixel)); box-shadow: 0 0 0 #000; }
+.choice .mark {
+  flex: 0 0 auto;
+  font-size: 0.8em;
+  padding: 5px 8px;
+  color: #04121a;
+}
+.choice:nth-child(1) { border-color: var(--red); }
+.choice:nth-child(1) .mark { background: var(--red); }
+.choice:nth-child(2) { border-color: var(--cyan); }
+.choice:nth-child(2) .mark { background: var(--cyan); }
+.choice:nth-child(3) { border-color: var(--yellow); }
+.choice:nth-child(3) .mark { background: var(--yellow); }
+.choice:nth-child(4) { border-color: var(--green); }
+.choice:nth-child(4) .mark { background: var(--green); }
+.choice.picked { background: var(--white); color: #0a0a1c; }
+.choice.disabled { opacity: 0.45; cursor: default; }
+
+/* 관리자 화면에서는 보기를 보여주기만 한다 */
+.choices.readonly .choice { cursor: default; }
+
+.fmt-badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 3px solid var(--magenta);
+  color: var(--magenta);
 }
