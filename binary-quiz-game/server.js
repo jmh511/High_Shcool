@@ -9,7 +9,7 @@ const os = require('os');
 const http = require('http');
 const express = require('express');
 const { Server } = require('socket.io');
-const { generateQuestions, checkAnswer } = require('./quiz');
+const { generateQuestions, checkAnswer, MODES } = require('./quiz');
 
 const PORT = process.env.PORT || 3000;
 
@@ -32,6 +32,7 @@ const DEFAULT_SETTINGS = {
   totalQuestions: 12,
   timeLimitSec: 20,
   hardTimeLimitSec: 25,
+  questionMode: 'all', // all | binary | hex
   difficultyMix: { easy: 0.3, medium: 0.5, hard: 0.2 },
   allowLeadingZeros: false,
   comboBonus: true,
@@ -64,6 +65,7 @@ function sanitizeSettings(raw) {
   s.timeLimitSec = clamp(s.timeLimitSec, 5, 120, 20);
   s.hardTimeLimitSec = clamp(s.hardTimeLimitSec, 5, 120, 25);
   s.maxPlayers = clamp(s.maxPlayers, 1, 200, 40);
+  s.questionMode = MODES[s.questionMode] ? s.questionMode : 'all';
   const mix = Object.assign({}, DEFAULT_SETTINGS.difficultyMix, (raw && raw.difficultyMix) || {});
   let sum = ['easy', 'medium', 'hard'].reduce((a, k) => a + (Number(mix[k]) || 0), 0);
   if (sum <= 0) sum = 1;

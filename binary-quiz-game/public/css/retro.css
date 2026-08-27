@@ -373,3 +373,41 @@ body::before {
   .panel { padding: 14px; }
   .podium .p .who { font-size: 13px; }
 }
+
+/* ── 소리 on/off 버튼 ─────────────────────────────────── */
+.sound-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 10001;
+  font-family: var(--font-kr);
+  font-size: 13px;
+  padding: 9px 12px;
+  background: var(--panel);
+  color: var(--green);
+  border: 3px solid var(--green);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.sound-toggle:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #000; }
+.sound-toggle.off { color: var(--dim); border-color: var(--line); }
+
+/* 소리 버튼과 겹치지 않도록 상단 여백 확보 */
+.wrap { padding-top: 52px; }
+
+/* ── 우승자 연출 ─────────────────────────────────────── */
+.winner-crown {
+  font-size: clamp(36px, 9vw, 64px);
+  animation: crownbob 0.8s steps(2) infinite alternate;
+}
+@keyframes crownbob { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+.winner-name {
+  font-family: var(--font-kr);
+  font-size: clamp(20px, 5vw, 36px);
+  color: var(--yellow);
+  text-shadow: var(--pixel) var(--pixel) 0 #3d3600;
+  margin: 8px 0;
+}

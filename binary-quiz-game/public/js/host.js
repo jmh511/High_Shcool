@@ -4,7 +4,7 @@
 
   var socket = io();
   var $ = function (id) { return document.getElementById(id); };
-  var state = { roomCode: null, offset: 0, endsAt: 0, limit: 20, raf: null, soundOn: true, players: [] };
+  var state = { roomCode: null, offset: 0, endsAt: 0, limit: 20, raf: null, players: [] };
 
   // ── 화면 전환 ────────────────────────────────────────
   function show(name) {
@@ -21,31 +21,17 @@
     t._t = setTimeout(function () { t.style.display = 'none'; }, 3000);
   }
 
-  // ── 8비트 효과음 (Web Audio API) ─────────────────────
-  var actx = null;
-  function beep(freq, dur, type, vol) {
-    if (!state.soundOn) return;
-    try {
-      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-      var o = actx.createOscillator();
-      var g = actx.createGain();
-      o.type = type || 'square';
-      o.frequency.value = freq;
-      g.gain.value = vol == null ? 0.06 : vol;
-      o.connect(g); g.connect(actx.destination);
-      o.start();
-      o.stop(actx.currentTime + (dur || 0.1));
-    } catch (e) { /* 소리 실패는 무시 */ }
-  }
-  function fanfare() {
-    [523, 659, 784, 1047].forEach(function (f, i) { setTimeout(function () { beep(f, 0.14); }, i * 110); });
-  }
+  // ── 사운드 (audio.js 공용 엔진) ──────────────────────
+  var audio = window.RetroAudio;
+  var sfx = function (n) { audio.sfx(n); };
+  audio.mountToggle(); // 우측 상단 소리 on/off 버튼
 
   // ── 방 만들기 ────────────────────────────────────────
   $('btn-create').addEventListener('click', function () {
-    state.soundOn = $('opt-sound').checked;
+    audio.setEnabled($('opt-sound').checked);
     socket.emit('host:create', {
       settings: {
+        questionMode: $('opt-mode').value,
         totalQuestions: +$('opt-count').value,
         timeLimitSec: +$('opt-time').value,
         hardTimeLimitSec: +$('opt-hardtime').value,
@@ -101,12 +87,12 @@
     btn.disabled = !ok;
     btn.classList.toggle('disabled', !ok);
     btn.textContent = ok ? '게임 시작 (' + d.count + '명)' : '게임 시작 (참여자 1명 이상)';
-    if (d.count > 0) beep(880, 0.05);
+    if (d.count > 0) sfx('join');
   });
 
   $('btn-start').addEventListener('click', function () {
     socket.emit('host:start');
-    fanfare();
+    sfx('start');
   });
 
   ['btn-skip', 'btn-skip2', 'btn-skip3'].forEach(function (id) {
@@ -114,10 +100,11 @@
   });
 
   $('btn-restart').addEventListener('click', function () {
+    audio.stopBgm();
     socket.emit('host:restart');
   });
 
-  socket.on('game:reset', function () { show('lobby'); });
+  socket.on('game:reset', function () { audio.stopBgm(); show('lobby'); });
 
   // ── 타이머 ──────────────────────────────────────────
   function stopTimer() {
@@ -137,7 +124,7 @@
       var sec = Math.ceil(remain / 1000);
       if (sec !== lastSec) {
         num.textContent = sec;
-        if (sec <= 5 && sec > 0) beep(1200, 0.05, 'square', 0.04);
+        if (sec <= 5 && sec > 0) sfx('tick');
         lastSec = sec;
       }
       var cls = ratio > 0.5 ? '' : ratio > 0.25 ? 'warn' : 'danger';
@@ -161,7 +148,8 @@
     $('q-base').textContent = base(q.fromBase) + ' → ' + base(q.toBase);
     show('question');
     runTimer();
-    beep(660, 0.12);
+    audio.stopBgm();
+    sfx('question');
   });
 
   function base(b) { return b === 2 ? '2진법' : b === 10 ? '10진법' : '16진법'; }
@@ -181,7 +169,7 @@
     var pct = d.totalPlayers ? (d.correctCount / d.totalPlayers * 100) : 0;
     $('r-bar').style.width = pct.toFixed(0) + '%';
     show('reveal');
-    beep(784, 0.18);
+    sfx('reveal');
   });
 
   socket.on('game:leaderboard', function (d) {
@@ -196,10 +184,15 @@
     });
     $('board-next').textContent = '다음 문제 ' + d.nextIndex + ' / ' + d.total + ' 준비 중...';
     show('board');
-    beep(1046, 0.1);
+    sfx('reveal');
   });
 
   socket.on('game:final', function (d) {
+    // 우승자
+    var winner = d.ranking[0];
+    $('winner-name').textContent = winner ? winner.avatar + ' ' + winner.nickname : '-';
+    $('winner-score').textContent = (winner ? winner.score : 0) + ' 점';
+
     // 시상대
     var pod = $('podium');
     pod.innerHTML = '';
@@ -239,7 +232,9 @@
     });
 
     show('final');
-    fanfare();
+    // 우승 팡파레 → 이어서 승리 배경음악 반복 재생
+    sfx('victory');
+    setTimeout(function () { audio.playBgm('victory'); }, 1600);
   });
 
   socket.on('error:msg', function (d) { toast(d.message); });

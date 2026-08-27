@@ -34,6 +34,30 @@ const DIFFICULTY = {
   },
 };
 
+// 출제 범위 모드 — 관리자가 진법을 골라서 출제할 수 있다.
+const MODES = {
+  all: {
+    label: '전체 (2·10·16진법)',
+    types: ['bin2dec', 'dec2bin', 'bin2hex', 'hex2bin', 'dec2hex', 'hex2dec'],
+  },
+  binary: {
+    label: '2진법만 (2 ↔ 10)',
+    types: ['bin2dec', 'dec2bin'],
+  },
+  hex: {
+    label: '16진법 위주',
+    types: ['dec2hex', 'hex2dec', 'bin2hex', 'hex2bin'],
+  },
+};
+
+/** 난이도 풀에서 선택한 모드에 해당하는 유형만 남긴다 */
+function poolFor(conf, mode) {
+  const allowed = (MODES[mode] || MODES.all).types;
+  const filtered = conf.pool.filter((t) => allowed.indexOf(t) >= 0);
+  // 한 방향만 남으면 단조로워지므로 해당 모드의 전체 유형을 쓴다
+  return new Set(filtered).size >= 2 ? filtered : allowed.slice();
+}
+
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -62,15 +86,18 @@ function planDifficulties(total, mix) {
   return plan; // 쉬움 → 보통 → 어려움 순서 (앞쉬움/뒤어려움 자동 상승)
 }
 
-function makeQuestion(difficulty, id, timeLimitSec, seen) {
+function makeQuestion(difficulty, id, timeLimitSec, seen, mode) {
   const conf = DIFFICULTY[difficulty];
+  const pool = poolFor(conf, mode);
+  // 2진법만 모드의 어려움 단계는 항상 8자리가 나오도록 범위를 좁힌다
+  const range = mode === 'binary' && difficulty === 'hard' ? [128, 255] : conf.range;
   let type;
   let n;
   let key;
   let guard = 0;
   do {
-    type = pick(conf.pool);
-    n = randInt(conf.range[0], conf.range[1]);
+    type = pick(pool);
+    n = randInt(range[0], range[1]);
     key = `${type}:${n}`;
     guard += 1;
   } while (seen.has(key) && guard < 200);
@@ -97,11 +124,11 @@ function makeQuestion(difficulty, id, timeLimitSec, seen) {
 }
 
 function generateQuestions(settings) {
-  const { totalQuestions, timeLimitSec, hardTimeLimitSec, difficultyMix } = settings;
+  const { totalQuestions, timeLimitSec, hardTimeLimitSec, difficultyMix, questionMode } = settings;
   const plan = planDifficulties(totalQuestions, difficultyMix);
   const seen = new Set();
   return plan.map((d, i) =>
-    makeQuestion(d, `q${i + 1}`, d === 'hard' ? hardTimeLimitSec : timeLimitSec, seen)
+    makeQuestion(d, `q${i + 1}`, d === 'hard' ? hardTimeLimitSec : timeLimitSec, seen, questionMode)
   );
 }
 
@@ -169,4 +196,4 @@ function checkAnswer(question, rawAnswer, allowLeadingZeros) {
   return false;
 }
 
-module.exports = { generateQuestions, checkAnswer, DIFFICULTY, BASE_NAME };
+module.exports = { generateQuestions, checkAnswer, DIFFICULTY, MODES, BASE_NAME };

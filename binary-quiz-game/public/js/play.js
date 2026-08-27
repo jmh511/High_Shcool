@@ -14,7 +14,6 @@
     limit: 20,
     raf: null,
     submitted: false,
-    soundOn: true,
   };
 
   function show(name) {
@@ -31,25 +30,10 @@
     t._t = setTimeout(function () { t.style.display = 'none'; }, 3000);
   }
 
-  // ── 8비트 효과음 ────────────────────────────────────
-  var actx = null;
-  function beep(freq, dur, type, vol) {
-    if (!state.soundOn) return;
-    try {
-      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-      if (actx.state === 'suspended') actx.resume();
-      var o = actx.createOscillator();
-      var g = actx.createGain();
-      o.type = type || 'square';
-      o.frequency.value = freq;
-      g.gain.value = vol == null ? 0.07 : vol;
-      o.connect(g); g.connect(actx.destination);
-      o.start();
-      o.stop(actx.currentTime + (dur || 0.1));
-    } catch (e) { /* 무시 */ }
-  }
-  function sfxOk() { [660, 880, 1320].forEach(function (f, i) { setTimeout(function () { beep(f, 0.1); }, i * 80); }); }
-  function sfxNo() { beep(180, 0.28, 'sawtooth'); }
+  // ── 사운드 (audio.js 공용 엔진) ─────────────────────
+  var audio = window.RetroAudio;
+  var sfx = function (n) { audio.sfx(n); };
+  audio.mountToggle(); // 우측 상단 소리 on/off 버튼
 
   // ── 정답 픽셀 파티클 ────────────────────────────────
   function particles() {
@@ -90,7 +74,7 @@
     state.roomCode = code;
     show('nick');
     $('in-nick').focus();
-    beep(880, 0.06);
+    sfx('join');
   });
 
   $('in-code').addEventListener('keydown', function (e) {
@@ -104,7 +88,7 @@
     var nick = $('in-nick').value.trim();
     if (!nick) return toast('닉네임을 입력하세요.');
     socket.emit('player:join', { roomCode: state.roomCode, nickname: nick });
-    beep(880, 0.06);
+    sfx('join');
   });
 
   socket.on('player:joined', function (d) {
@@ -117,7 +101,7 @@
   });
 
   socket.on('room:players', function (d) { $('lobby-count').textContent = d.count; });
-  socket.on('game:reset', function () { show('lobby'); });
+  socket.on('game:reset', function () { audio.stopBgm(); show('lobby'); });
   socket.on('error:msg', function (d) {
     toast(d.message);
     if (!state.playerId) show('code');
@@ -148,7 +132,7 @@
     del.addEventListener('click', function () {
       state.answer = state.answer.slice(0, -1);
       renderAnswer();
-      beep(300, 0.05);
+      sfx('del');
     });
     del.style.gridColumn = 'span ' + (toBase === 2 ? 2 : toBase === 10 ? 3 : 4);
     pad.appendChild(del);
@@ -159,7 +143,7 @@
     if (state.answer.length >= 16) return;
     state.answer += k;
     renderAnswer();
-    beep(520, 0.04);
+    sfx('key');
   }
 
   function renderAnswer() {
@@ -194,7 +178,7 @@
     $('wait-answer').textContent = d.answer;
     stopTimer();
     show('wait');
-    beep(700, 0.1);
+    sfx('submit');
   });
 
   // ── 타이머 ──────────────────────────────────────────
@@ -235,7 +219,8 @@
     buildKeypad(q.toBase);
     show('question');
     runTimer();
-    beep(660, 0.1);
+    audio.stopBgm();
+    sfx('question');
   });
 
   function baseName(b) { return b === 2 ? '2진법' : b === 10 ? '10진법' : '16진법'; }
@@ -261,7 +246,7 @@
     $('res-rank').textContent = d.rank;
     $('res-total').textContent = d.totalPlayers;
     show('result');
-    if (d.isCorrect) { sfxOk(); particles(); } else { sfxNo(); }
+    if (d.isCorrect) { sfx('correct'); particles(); } else { sfx('wrong'); }
   });
 
   socket.on('player:final', function (d) {
@@ -280,6 +265,9 @@
     });
     show('final');
     if (d.rank <= 3) particles();
+    // 우승 팡파레 → 이어서 승리 배경음악 반복 재생
+    sfx('victory');
+    setTimeout(function () { audio.playBgm('victory'); }, 1600);
   });
 
   function escapeHtml(s) {
