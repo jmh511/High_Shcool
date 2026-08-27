@@ -1,0 +1,19 @@
+# Render 배포 설정 (Blueprint)
+# https://render.com 에서 이 저장소를 연결하면 아래 설정대로 자동 배포됩니다.
+#
+# 주의: 방 정보를 서버 메모리에만 두므로 인스턴스는 반드시 1개여야 합니다.
+#       (여러 대로 늘리면 학생이 다른 서버에 붙어 방을 못 찾습니다)
+services:
+  - type: web
+    name: binary-quiz-game
+    runtime: node
+    plan: free
+    region: singapore        # 한국에서 가장 가까운 지역
+    rootDir: binary-quiz-game  # package.json 이 이 폴더 안에 있습니다
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /host
+    numInstances: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

@@ -474,13 +474,21 @@ function localIPs() {
 }
 
 server.listen(PORT, () => {
+  // 배포 환경(Render 등)이면 공개 주소를, 아니면 교실 와이파이 주소를 안내한다
+  const publicUrl = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL;
   console.log('\n===============================================');
   console.log('  진법 변환 퀴즈 게임 서버가 시작되었습니다!');
   console.log('===============================================');
-  console.log('  관리자 화면 : http://localhost:' + PORT + '/host');
-  console.log('  참여자 화면 : http://localhost:' + PORT + '/play');
-  localIPs().forEach((ip) => {
-    console.log('  (같은 와이파이) 참여자 접속 주소 : http://' + ip + ':' + PORT + '/play');
-  });
+  if (publicUrl) {
+    const base = publicUrl.replace(/\/$/, '');
+    console.log('  관리자 화면 : ' + base + '/host');
+    console.log('  참여자 화면 : ' + base + '/play');
+  } else {
+    console.log('  관리자 화면 : http://localhost:' + PORT + '/host');
+    console.log('  참여자 화면 : http://localhost:' + PORT + '/play');
+    localIPs().forEach((ip) => {
+      console.log('  (같은 와이파이) 참여자 접속 주소 : http://' + ip + ':' + PORT + '/play');
+    });
+  }
   console.log('===============================================\n');
 });
