@@ -1,0 +1,9 @@
+# 의존성
+node_modules/
+
+# 로컬 도구 설정 (개인 환경)
+.claude/settings.local.json
+
+# 로그
+*.log
+npm-debug.log*
