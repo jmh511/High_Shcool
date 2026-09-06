@@ -13,7 +13,8 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /host
-    numInstances: 1
+    # numInstances 는 무료 요금제에서 지원하지 않아 적지 않는다.
+    # (무료 요금제는 어차피 항상 1개이므로 위 주의사항은 그대로 지켜진다)
     envVars:
       - key: NODE_VERSION
         value: "20"
