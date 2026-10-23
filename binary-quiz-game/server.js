@@ -275,6 +275,7 @@ io.on('connection', (socket) => {
       questions: [],
       currentQuestionIndex: 0,
       submissions: {},
+      recentValues: [],
       stats: [],
       timer: null,
       createdAt: Date.now(),
@@ -304,7 +305,14 @@ io.on('connection', (socket) => {
     if (!room || room.hostSocketId !== socket.id) return fail('호스트만 게임을 시작할 수 있습니다.');
     if (room.status === 'in_progress') return;
     if (activePlayers(room).length < 1) return fail('참여자가 최소 1명 필요합니다.');
-    room.questions = generateQuestions(room.settings);
+    // 직전 판에 나온 숫자는 피해서 출제한다 (같은 방에서 여러 판을 돌릴 때 반복 방지).
+    // 기억을 너무 길게 가져가면 쓸 숫자가 동나므로 최근 두 판 분량만 남긴다.
+    room.questions = generateQuestions(room.settings, room.recentValues);
+    const historyLimit = Math.min(60, room.settings.totalQuestions * 2);
+    room.recentValues = room.questions
+      .map((q) => q.value)
+      .concat(room.recentValues || [])
+      .slice(0, historyLimit);
     room.currentQuestionIndex = 0;
     room.submissions = {};
     room.stats = [];

@@ -16,19 +16,21 @@ const BASE_NAME = { 2: '2진법', 10: '10진법', 16: '16진법' };
 
 // 난이도별 값 범위 + 출제 유형 풀(pool). 같은 유형을 여러 번 넣어 가중치를 준다.
 const DIFFICULTY = {
+  // 난이도마다 자릿수 구간이 겹치지 않게 나눈다.
+  // (예전에는 보통과 어려움이 둘 다 16~255 라서 난이도 차이도, 문제 변화도 적었다)
   easy: {
     label: '★ 쉬움',
-    range: [8, 15], // 4비트: 2진수 4자리, 16진수 1자리
+    range: [2, 15], // 2~4비트: 2진수 2~4자리, 16진수 1자리
     pool: ['bin2dec', 'bin2dec', 'dec2bin', 'dec2bin', 'dec2hex', 'hex2dec'],
   },
   medium: {
     label: '★★ 보통',
-    range: [16, 255], // 8비트: 16진수 2자리
+    range: [16, 127], // 5~7비트: 16진수 2자리
     pool: ['bin2dec', 'dec2bin', 'bin2hex', 'hex2bin', 'dec2hex', 'hex2dec'],
   },
   hard: {
     label: '★★★ 어려움',
-    range: [16, 255],
+    range: [128, 255], // 8비트 고정: 2진수 8자리, 16진수 2자리
     // 10진수를 거치지 않는 2↔16 직접 변환 비중을 높인다
     pool: ['bin2hex', 'bin2hex', 'bin2hex', 'hex2bin', 'hex2bin', 'hex2bin', 'dec2bin', 'hex2dec'],
   },
@@ -155,19 +157,18 @@ function planDifficulties(total, mix) {
 function makeQuestion(difficulty, id, timeLimitSec, seen, mode, format) {
   const conf = DIFFICULTY[difficulty];
   const pool = poolFor(conf, mode);
-  // 2진법만 모드의 어려움 단계는 항상 8자리가 나오도록 범위를 좁힌다
-  const range = mode === 'binary' && difficulty === 'hard' ? [128, 255] : conf.range;
+  const range = conf.range;
   let type;
   let n;
-  let key;
   let guard = 0;
+  // 숫자 자체를 기준으로 중복을 막는다.
+  // (방향까지 묶어서 보면 11 → 1011 과 1011 → 11 이 한 게임에 둘 다 나와 반복처럼 느껴진다)
   do {
     type = pick(pool);
     n = randInt(range[0], range[1]);
-    key = `${type}:${n}`;
     guard += 1;
-  } while (seen.has(key) && guard < 200);
-  seen.add(key);
+  } while (seen.has(n) && guard < 300);
+  seen.add(n);
 
   const { from, to } = TYPES[type];
   const sourceValue = toBase(n, from);
@@ -191,11 +192,17 @@ function makeQuestion(difficulty, id, timeLimitSec, seen, mode, format) {
   };
 }
 
-function generateQuestions(settings) {
+/**
+ * 한 판에 쓸 문제를 만든다.
+ * @param settings  방 설정
+ * @param recentValues  최근 판에 썼던 숫자들. 이번 판에서는 되도록 피한다.
+ *                      (같은 방에서 여러 판을 돌릴 때 같은 숫자가 바로 또 나오는 걸 막는다)
+ */
+function generateQuestions(settings, recentValues) {
   const { totalQuestions, timeLimitSec, hardTimeLimitSec, difficultyMix, questionMode, answerFormat } = settings;
   const plan = planDifficulties(totalQuestions, difficultyMix);
   const formats = planFormats(plan.length, answerFormat);
-  const seen = new Set();
+  const seen = new Set(recentValues || []);
   return plan.map((d, i) =>
     makeQuestion(d, `q${i + 1}`, d === 'hard' ? hardTimeLimitSec : timeLimitSec, seen, questionMode, formats[i])
   );
