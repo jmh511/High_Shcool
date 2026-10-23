@@ -64,8 +64,12 @@
   }
 
   // ── 입장 ────────────────────────────────────────────
+  // 방 코드는 두 가지 주소 모두에서 읽는다.
+  //   짧은 주소  .../9749        ← 학생이 직접 입력할 때 쓰는 형태
+  //   예전 주소  .../play?code=9749
   var params = new URLSearchParams(location.search);
-  var preCode = (params.get('code') || '').replace(/\D/g, '').slice(0, 4);
+  var fromPath = (/\/(\d{4})\/?$/.exec(location.pathname) || [])[1] || '';
+  var preCode = (fromPath || params.get('code') || '').replace(/\D/g, '').slice(0, 4);
   if (preCode) $('in-code').value = preCode;
 
   $('in-code').addEventListener('input', function (e) {

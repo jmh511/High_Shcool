@@ -19,6 +19,13 @@ app.get('/', (req, res) => res.redirect('/play.html'));
 app.get('/host', (req, res) => res.sendFile(path.join(__dirname, 'public', 'host.html')));
 app.get('/play', (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
 
+// 방 코드를 주소 끝에 바로 붙이는 짧은 입장 주소.
+//   예전: .../play?code=9749  (학생이 직접 치기엔 길다)
+//   지금: .../9749
+// 정적 파일(express.static)이 먼저 처리되므로 /css/... 같은 주소와 겹치지 않고,
+// 숫자 4자리일 때만 매치되므로 /host, /play 와도 겹치지 않는다.
+app.get('/:code(\\d{4})', (req, res) => res.sendFile(path.join(__dirname, 'public', 'play.html')));
+
 const server = http.createServer(app);
 const io = new Server(server);
 

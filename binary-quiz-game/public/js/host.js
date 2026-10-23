@@ -50,9 +50,11 @@
   socket.on('room:created', function (d) {
     state.roomCode = d.roomCode;
     sessionStorage.setItem('hostRoom', d.roomCode);
-    var url = location.origin + '/play?code=' + d.roomCode;
+    // 짧은 입장 주소. 학생이 직접 칠 때를 위해 화면에는 https:// 를 뗀 형태로 보여준다
+    // (브라우저가 알아서 붙여준다). QR 과 복사용으로는 전체 주소를 쓴다.
+    var url = location.origin + '/' + d.roomCode;
     $('room-code').textContent = d.roomCode;
-    $('join-url').textContent = url;
+    $('join-url').textContent = location.host + '/' + d.roomCode;
     $('lobby-setting').textContent =
       d.settings.totalQuestions + '문제 / ' + d.settings.timeLimitSec + '초';
 
