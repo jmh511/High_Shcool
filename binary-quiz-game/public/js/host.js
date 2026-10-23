@@ -57,15 +57,17 @@
       d.settings.totalQuestions + '문제 / ' + d.settings.timeLimitSec + '초';
 
     // QR (인터넷 연결 시에만 표시)
+    // 교실 뒷자리에서도 찍히도록 크게 띄운다. 실제 크기는 CSS(.qr-panel img)가 정하고,
+    // 원본은 넉넉히 720px 로 받아 확대해도 뭉개지지 않게 한다.
+    // margin=2 는 QR 주변 여백(quiet zone) — 이게 없으면 인식률이 떨어진다.
     var wrap = $('qr-wrap');
     wrap.innerHTML = '';
     var img = new Image();
-    img.width = 160; img.height = 160;
     img.alt = 'QR';
-    img.style.imageRendering = 'pixelated';
-    img.style.border = '4px solid #fff';
-    img.onerror = function () { wrap.innerHTML = ''; };
-    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+    img.onerror = function () {
+      wrap.innerHTML = '<div class="sub">QR을 불러오지 못했습니다. 오른쪽 주소로 접속해 주세요.</div>';
+    };
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=720x720&margin=2&data=' + encodeURIComponent(url);
     wrap.appendChild(img);
 
     show('lobby');

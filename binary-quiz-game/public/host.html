@@ -60,21 +60,31 @@
     </div>
   </section>
 
-  <!-- 2. 대기실 -->
+  <!-- 2. 대기실 — 왼쪽에 큰 QR, 오른쪽에 주소/코드/참여자 -->
   <section id="s-lobby" class="screen">
-    <div class="panel glow-green center">
-      <div class="sub">참여자는 아래 주소로 접속하세요</div>
-      <div class="joinurl" id="join-url">-</div>
-      <div class="sub" style="margin-top:14px">방 코드</div>
-      <div class="roomcode" id="room-code">----</div>
-      <div id="qr-wrap" style="margin-top:6px"></div>
-    </div>
-    <div class="panel">
-      <div class="qmeta">
-        <span>참여자 <b class="cyan" id="lobby-count">0</b>명</span>
-        <span class="badge" id="lobby-setting">-</span>
+    <div class="split lobby">
+      <!-- 왼쪽: 멀리서도 찍을 수 있게 큼직한 QR -->
+      <div class="panel glow-green center qr-panel">
+        <div class="sub">휴대폰 카메라로 찍으세요</div>
+        <div id="qr-wrap"></div>
       </div>
-      <div class="players" id="lobby-players" style="margin-top:14px"></div>
+
+      <!-- 오른쪽: QR 못 찍는 학생용 주소 + 방 코드, 참여자 목록 -->
+      <div>
+        <div class="panel glow-cyan center">
+          <div class="sub">QR이 안 되면 이 주소로 접속</div>
+          <div class="joinurl" id="join-url">-</div>
+          <div class="sub" style="margin-top:12px">방 코드</div>
+          <div class="roomcode" id="room-code">----</div>
+        </div>
+        <div class="panel">
+          <div class="qmeta">
+            <span>참여자 <b class="cyan" id="lobby-count">0</b>명</span>
+            <span class="badge" id="lobby-setting">-</span>
+          </div>
+          <div class="players" id="lobby-players" style="margin-top:14px"></div>
+        </div>
+      </div>
     </div>
     <button id="btn-start" class="btn green big disabled" disabled>게임 시작 (참여자 1명 이상)</button>
   </section>

@@ -502,3 +502,29 @@ body.host .choice { font-size: clamp(18px, 2.4vw, 38px); padding: 24px 16px; }
 body.host .winner-name { font-size: clamp(26px, 4vw, 56px); }
 body.host .podium .p .who { font-size: clamp(15px, 1.6vw, 24px); }
 body.host .podium .p .av { font-size: clamp(34px, 4vw, 60px); }
+
+/* ── 대기실: 큰 QR + 작아진 주소/방코드 ─────────────── */
+/* QR 칸을 조금 넓게 잡아 최대한 크게 띄운다 */
+.split.lobby { grid-template-columns: 1.3fr 1fr; }
+
+.qr-panel { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.qr-panel img {
+  display: block;
+  width: min(52vh, 560px);   /* 화면 높이에 맞춰 최대한 크게 */
+  height: auto;
+  max-width: 100%;
+  background: #fff;
+  padding: 12px;             /* QR 주변 흰 여백 — 인식률을 높인다 */
+  border: var(--pixel) solid #fff;
+  box-shadow: var(--pixel) var(--pixel) 0 #000;
+  image-rendering: pixelated;
+}
+
+/* 주소와 방 코드는 QR 보조 수단이므로 작게 */
+body.host .joinurl { font-size: clamp(12px, 1.25vw, 19px); }
+body.host .roomcode { font-size: clamp(32px, 5vw, 64px); margin: 4px 0; }
+
+@media (max-width: 900px) {
+  .split.lobby { grid-template-columns: 1fr; }
+  .qr-panel img { width: min(60vw, 360px); }
+}

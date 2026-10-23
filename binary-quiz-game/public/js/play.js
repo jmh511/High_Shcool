@@ -31,10 +31,13 @@
     t._t = setTimeout(function () { t.style.display = 'none'; }, 3000);
   }
 
-  // ── 사운드 (audio.js 공용 엔진) ─────────────────────
-  var audio = window.RetroAudio;
-  var sfx = function (n) { audio.sfx(n); };
-  audio.mountToggle(); // 우측 상단 소리 on/off 버튼
+  // ── 소리 없음 ───────────────────────────────────────
+  // 학생 기기에서는 효과음도 배경음악도 내지 않는다.
+  // 교실에서 수십 대가 제각각 소리를 내면 시끄럽기만 하므로,
+  // 소리는 프로젝터에 연결된 교실 컴퓨터(관리자 화면)에서만 나온다.
+  // audio.js 자체를 불러오지 않으므로 오디오 장치도 건드리지 않는다.
+  var sfx = function () {};
+  var audio = { playBgm: function () {}, stopBgm: function () {} };
 
   // ── 정답 픽셀 파티클 ────────────────────────────────
   function particles() {
