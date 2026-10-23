@@ -104,25 +104,28 @@ window.RetroAudio = (function () {
   // ── 배경음악 ───────────────────────────────────────
   // null = 쉼표. 8분음표 단위 시퀀스.
   var TRACKS = {
-    // 대기실 — 느긋하게 기다리는 분위기
+    // 대기실 — 밝고 통통 튀는 분위기.
+    // 다장조 + 요즘 팝에서 가장 많이 쓰는 코드 진행(C - G - Am - F).
+    // 예전에는 가단조라 으스스하게 들렸다.
     lobby: {
       file: '/assets/sounds/lobby.mp3',
-      bpm: 100,
+      bpm: 116,
       vol: 0.035,
-      lead: ['E5', null, 'G5', null, 'A5', null, 'G5', null,
-             'E5', null, 'D5', null, 'E5', null, null, null],
-      bass: ['A2', null, null, null, 'E2', null, null, null,
-             'F2', null, null, null, 'G2', null, null, null],
+      lead: ['C5', 'E5', 'G5', 'E5', 'B4', 'D5', 'G5', 'D5',
+             'A4', 'C5', 'E5', 'C5', 'F4', 'A4', 'C5', 'A4'],
+      bass: ['C3', null, 'G2', null, 'G2', null, 'D3', null,
+             'A2', null, 'E3', null, 'F2', null, 'C3', null],
     },
-    // 문제 푸는 중 — 가볍게 깔리는 리듬 (문제 집중을 방해하지 않도록 작게)
+    // 문제 푸는 중 — 다장조 C - F - G - C.
+    // 문제 집중을 방해하지 않게 음을 띄엄띄엄 두고 음량도 가장 작게 잡았다.
     game: {
       file: '/assets/sounds/game.mp3',
-      bpm: 116,
+      bpm: 120,
       vol: 0.03,
-      lead: ['A4', null, 'C5', null, 'E5', null, 'C5', null,
-             'G4', null, 'B4', null, 'D5', null, 'B4', null],
-      bass: ['A2', null, 'A2', null, 'E2', null, 'E2', null,
-             'G2', null, 'G2', null, 'D2', null, 'D2', null],
+      lead: ['E5', null, 'G5', null, 'F5', null, 'A5', null,
+             'G5', null, 'B5', null, 'G5', null, 'E5', null],
+      bass: ['C3', null, 'G2', null, 'F2', null, 'C3', null,
+             'G2', null, 'D3', null, 'C3', null, 'G2', null],
     },
     // 최종 결과 — 승리의 행진곡
     victory: {
@@ -146,7 +149,9 @@ window.RetroAudio = (function () {
       var l = track.lead[step % track.lead.length];
       var b = track.bass[step % track.bass.length];
       if (l) tone(l, stepMs * 0.85 / 1000, 'square', track.vol);
-      if (b) tone(b, stepMs * 1.7 / 1000, 'triangle', track.vol * 1.15);
+      // 베이스를 짧게 끊어 통통 튀게 한다.
+      // 예전처럼 길게 깔면 저음이 웅- 하고 끌려서 음산하게 들린다.
+      if (b) tone(b, stepMs * 0.7 / 1000, 'triangle', track.vol * 1.15);
       step += 1;
     }, stepMs);
   }
